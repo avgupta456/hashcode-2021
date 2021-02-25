@@ -80,11 +80,9 @@ def get_car_multipliers(
             car.multiplier = 1
         elif time > 0.8 * D:
             car.multiplier = 4
-        elif time > 0.5 * D:
+        else:
             x = time / D
             car.multiplier = max(1, round(10 * x))
-        else:
-            car.multiplier = 1
 
     return cars
 
