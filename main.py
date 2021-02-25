@@ -1,4 +1,3 @@
-import math
 from typing import Dict, List
 from collections import defaultdict
 
@@ -7,6 +6,7 @@ class Car:
     def __init__(self, id: int, streets: List[int]):
         self.id = id
         self.streets = streets
+        self.multiplier = 1
 
         self.curr_index = 0
 
@@ -69,6 +69,22 @@ class Intersection:
         return self.__str__()
 
 
+def get_car_multipliers(
+    D: int, F: int, cars: List[Car], streets: List[Street]
+) -> List[Car]:
+    for car in cars:
+        time = sum([streets[i].length for i in car.streets])
+        if time > D:
+            car.multiplier = 0
+        elif time > 0.9 * D:
+            car.multiplier = 1
+        else:
+            x = time / D
+            car.multiplier = max(1, round(10 * x))
+
+    return cars
+
+
 def get_intersection_throughput(
     streets: List[Street], cars: List[Car], intersections: List[Intersection], n: int
 ) -> Dict[int, Dict[int, int]]:
@@ -78,15 +94,22 @@ def get_intersection_throughput(
     for car in cars:
         for street in car.streets:
             street_obj = streets[street]
-            int_counts[street_obj.int_end] += 1
-            int_street_counts[street_obj.int_end][street] += 1
+            if car.multiplier > 0:
+                int_counts[street_obj.int_end] += car.multiplier
+                int_street_counts[street_obj.int_end][street] += car.multiplier
 
-    int_street_counts = {
-        i: {k: math.ceil(n * v / int_counts[i]) for k, v in street_counts.items()}
-        for i, street_counts in int_street_counts.items()
-    }
+    new_int_street_counts = {}
+    for i, street_counts in int_street_counts.items():
+        new_street_counts = {}
+        for k, v in street_counts.items():
+            new_street_counts[k] = max(1, round(n * v / int_counts[i]))
+        min_num = min(new_street_counts.values())
+        new_street_counts = {
+            k: round(v / min_num) for k, v in new_street_counts.items()
+        }
+        new_int_street_counts[i] = new_street_counts
 
-    return int_street_counts
+    return new_int_street_counts
 
 
 def main(path_in: str, path_out: str) -> None:
@@ -120,21 +143,8 @@ def main(path_in: str, path_out: str) -> None:
             intersections[street.int_start].add_outgoing(street.id)
             intersections[street.int_end].add_incoming(street.id)
 
-    """
-    print("Time Limit:", D)
-    print("Car Bonus:", F)
-
-    print("Streets")
-    print(streets)
-
-    print("Cars")
-    print(cars)
-
-    print("Intersections")
-    print(intersections)
-    """
-
-    int_street_counts = get_intersection_throughput(streets, cars, intersections, 5)
+    cars = get_car_multipliers(D, F, cars, streets)
+    int_street_counts = get_intersection_throughput(streets, cars, intersections, 10)
 
     # FILE WRITE
     with open(path_out, "w") as file:
