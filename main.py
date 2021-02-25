@@ -78,9 +78,13 @@ def get_car_multipliers(
             car.multiplier = 0
         elif time > 0.9 * D:
             car.multiplier = 1
-        else:
+        elif time > 0.8 * D:
+            car.multiplier = 4
+        elif time > 0.5 * D:
             x = time / D
             car.multiplier = max(1, round(10 * x))
+        else:
+            car.multiplier = 1
 
     return cars
 
@@ -144,7 +148,7 @@ def main(path_in: str, path_out: str) -> None:
             intersections[street.int_end].add_incoming(street.id)
 
     cars = get_car_multipliers(D, F, cars, streets)
-    int_street_counts = get_intersection_throughput(streets, cars, intersections, 10)
+    int_street_counts = get_intersection_throughput(streets, cars, intersections, 3)
 
     # FILE WRITE
     with open(path_out, "w") as file:
