@@ -1,4 +1,6 @@
-from typing import List
+import math
+from typing import Dict, List
+from collections import defaultdict
 
 
 class Car:
@@ -67,13 +69,35 @@ class Intersection:
         return self.__str__()
 
 
-def main(path: str) -> None:
-    with open(path) as file:
+def get_intersection_throughput(
+    streets: List[Street], cars: List[Car], intersections: List[Intersection], n: int
+) -> Dict[int, Dict[int, int]]:
+    int_counts: Dict[int, int] = defaultdict(int)
+    int_street_counts: Dict[int, Dict[int, int]] = defaultdict(lambda: defaultdict(int))
+
+    for car in cars:
+        for street in car.streets:
+            street_obj = streets[street]
+            int_counts[street_obj.int_end] += 1
+            int_street_counts[street_obj.int_end][street] += 1
+
+    int_street_counts = {
+        i: {k: math.ceil(n * v / int_counts[i]) for k, v in street_counts.items()}
+        for i, street_counts in int_street_counts.items()
+    }
+
+    return int_street_counts
+
+
+def main(path_in: str, path_out: str) -> None:
+    # FILE READ
+    with open(path_in) as file:
         lines = file.read().strip().split("\n")
         D, I, S, V, F = [int(x) for x in lines[0].split(" ")]
 
         streets: List[Street] = []
         streets_dict = {}
+        streets_dict_inv = {}
         for i, line in enumerate(lines[1 : S + 1]):
             street_data = line.split(" ")
             B = int(street_data[0])
@@ -82,6 +106,7 @@ def main(path: str) -> None:
             L = int(street_data[3])
             street = Street(i, B, E, L)
             streets_dict[name] = i
+            streets_dict_inv[i] = name
             streets.append(street)
 
         cars: List[Car] = []
@@ -95,6 +120,7 @@ def main(path: str) -> None:
             intersections[street.int_start].add_outgoing(street.id)
             intersections[street.int_end].add_incoming(street.id)
 
+    """
     print("Time Limit:", D)
     print("Car Bonus:", F)
 
@@ -106,6 +132,23 @@ def main(path: str) -> None:
 
     print("Intersections")
     print(intersections)
+    """
+
+    int_street_counts = get_intersection_throughput(streets, cars, intersections, 5)
+
+    # FILE WRITE
+    with open(path_out, "w") as file:
+        file.write(str(len(int_street_counts.keys())) + "\n")
+        for i, int_streets in int_street_counts.items():
+            file.write(str(i) + "\n")
+            file.write(str(len(int_streets.keys())) + "\n")
+            for j, weight in int_streets.items():
+                file.write(streets_dict_inv[j] + " " + str(weight) + "\n")
 
 
-main("data/a.txt")
+main("data/a.txt", "output/a.txt")
+main("data/b.txt", "output/b.txt")
+main("data/c.txt", "output/c.txt")
+main("data/d.txt", "output/d.txt")
+main("data/e.txt", "output/e.txt")
+main("data/f.txt", "output/f.txt")
