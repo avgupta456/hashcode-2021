@@ -1,0 +1,16 @@
+{
+    "python.linting.flake8Enabled": true,
+    "python.linting.pylintEnabled": false,
+    "python.linting.enabled": true,
+    "python.analysis.typeCheckingMode": "strict",
+    "python.analysis.diagnosticMode": "workspace",
+    "python.pythonPath": "c:\\Users\\Abhijit\\Documents\\GitHub\\hashcode-2021\\.venv\\Scripts\\python.exe",
+
+    
+    "files.exclude": {
+        "**/.git": true,
+        "**/__pycache__": true,
+    },
+
+    "editor.formatOnSave": true,
+}
